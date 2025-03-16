@@ -40,10 +40,20 @@ def update_spreadsheet():
         df['AnoVenc'] = df['Data Vencimento'].dt.year.astype(str)
         df['Titulo'] = df['Tipo Titulo'] + ' ' + df['AnoVenc']
 
-        # Seleciona as colunas desejadas e ajusta os nomes
-        df_final = df[['Titulo', 'Data Base', 'PU Base Manha']].copy()
-        df_final.rename(columns={'Data Base': 'Data', 'PU Base Manha': 'PUBase'}, inplace=True)
-        df_final['Data'] = df_final['Data'].dt.strftime('%d/%m/%Y')
+        # Seleciona as colunas desejadas
+        df_subset = df[['Titulo', 'Data Base', 'PU Base Manha']].copy()
+        # Remove linhas sem data para evitar problemas no agrupamento
+        df_subset = df_subset.dropna(subset=['Data Base'])
+        
+        # Para cada 'Titulo', seleciona a linha com a data mais recente
+        df_grouped = df_subset.loc[df_subset.groupby('Titulo')['Data Base'].idxmax()].reset_index(drop=True)
+        
+        # Formata a data para string
+        df_grouped['Data'] = df_grouped['Data Base'].dt.strftime('%d/%m/%Y')
+        
+        # Seleciona e renomeia as colunas para a planilha
+        df_final = df_grouped[['Titulo', 'Data', 'PU Base Manha']].copy()
+        df_final.rename(columns={'PU Base Manha': 'PUBase'}, inplace=True)
 
         # Prepara os dados para a planilha (incluindo cabeçalho)
         data_to_update = [df_final.columns.tolist()] + df_final.values.tolist()
@@ -51,12 +61,11 @@ def update_spreadsheet():
         # Limpa a aba antes de atualizar
         worksheet.clear()
 
-        # Tenta atualizar a planilha e, se ocorrer uma exceção "<Response [200]>", trata como sucesso
+        # Atualiza a planilha; se ocorrer uma exceção "<Response [200]>", trata como sucesso
         try:
             worksheet.update('A1', data_to_update)
         except Exception as ex:
-            if str(ex) == "<Response [200]>":
-                # Se a exceção for esse retorno, consideramos que a atualização foi bem-sucedida.
+            if "<Response [200]>" in str(ex):
                 pass
             else:
                 raise ex
