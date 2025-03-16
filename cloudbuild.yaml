@@ -1,11 +1,11 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/tesourodireto/my-flask-app', '.']
+    args: ['build', '-t', 'gcr.io/tesourodireto/tesourocontainer', '.']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/tesourodireto/my-flask-app']
+    args: ['push', 'gcr.io/tesourodireto/tesourocontainer']
 
 images:
-  - 'gcr.io/tesourodireto/my-flask-app'
+  - 'gcr.io/tesourodireto/tesourocontainer'
 
 options:
   logging: CLOUD_LOGGING_ONLY
