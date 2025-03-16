@@ -25,9 +25,11 @@ def update_spreadsheet():
         worksheet = spreadsheet.worksheet('Cotações')  # Nome da aba
 
         # URL do CSV do Tesouro Transparente
-        url = ("https://www.tesourotransparente.gov.br/ckan/dataset/"
-               "df56aa42-484a-4a59-8184-7676580c81e3/resource/"
-               "796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv")
+        url = (
+            "https://www.tesourotransparente.gov.br/ckan/dataset/"
+            "df56aa42-484a-4a59-8184-7676580c81e3/resource/"
+            "796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv"
+        )
         
         # Lê o CSV
         df = pd.read_csv(url, sep=';', decimal=',', encoding='latin-1')
@@ -46,9 +48,18 @@ def update_spreadsheet():
         # Prepara os dados para a planilha (incluindo cabeçalho)
         data_to_update = [df_final.columns.tolist()] + df_final.values.tolist()
 
-        # Limpa a aba e atualiza os dados a partir da célula A1
+        # Limpa a aba antes de atualizar
         worksheet.clear()
-        worksheet.update('A1', data_to_update)
+
+        # Tenta atualizar a planilha e, se ocorrer uma exceção "<Response [200]>", trata como sucesso
+        try:
+            worksheet.update('A1', data_to_update)
+        except Exception as ex:
+            if str(ex) == "<Response [200]>":
+                # Se a exceção for esse retorno, consideramos que a atualização foi bem-sucedida.
+                pass
+            else:
+                raise ex
 
         return jsonify({"message": "Planilha atualizada com sucesso!", "rows": len(df_final)}), 200
 
