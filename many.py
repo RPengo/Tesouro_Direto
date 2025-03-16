@@ -45,10 +45,15 @@ def update_spreadsheet():
         data_to_update = [df_final.columns.tolist()] + df_final.values.tolist()
 
         # Limpa a aba antes de atualizar (opcional)
-        worksheet.clear()
+        clear_response = worksheet.clear()
 
         # Atualiza a planilha a partir da célula A1
-        worksheet.update('A1', data_to_update)
+        update_response = worksheet.update('A1', data_to_update)
+
+        # Se update_response tiver atributo 'status_code', verifique-o
+        if hasattr(update_response, 'status_code'):
+            if update_response.status_code != 200:
+                return jsonify({"error": f"Erro na atualização da planilha: {update_response}"}), 500
 
         return jsonify({"message": "Planilha atualizada com sucesso!", "rows": len(df_final)}), 200
 
